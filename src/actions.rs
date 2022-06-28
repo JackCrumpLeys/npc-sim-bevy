@@ -15,7 +15,7 @@ impl Plugin for ActionsPlugin {
 
 #[derive(Default)]
 pub struct Actions {
-    pub player_movement: Option<Vec2>,
+    pub camera_movement: Option<Vec2>,
 }
 
 fn set_movement_actions(mut actions: ResMut<Actions>, keyboard_input: Res<Input<KeyCode>>) {
@@ -45,7 +45,7 @@ fn set_movement_actions(mut actions: ResMut<Actions>, keyboard_input: Res<Input<
         } else if GameControl::Down.just_pressed(&keyboard_input) {
             player_movement.y = -1.;
         } else {
-            player_movement.y = actions.player_movement.unwrap_or(Vec2::ZERO).y;
+            player_movement.y = actions.camera_movement.unwrap_or(Vec2::ZERO).y;
         }
 
         if GameControl::Right.just_released(&keyboard_input)
@@ -63,15 +63,15 @@ fn set_movement_actions(mut actions: ResMut<Actions>, keyboard_input: Res<Input<
         } else if GameControl::Left.just_pressed(&keyboard_input) {
             player_movement.x = -1.;
         } else {
-            player_movement.x = actions.player_movement.unwrap_or(Vec2::ZERO).x;
+            player_movement.x = actions.camera_movement.unwrap_or(Vec2::ZERO).x;
         }
 
         if player_movement != Vec2::ZERO {
             player_movement = player_movement.normalize();
-            actions.player_movement = Some(player_movement);
+            actions.camera_movement = Some(player_movement);
         }
     } else {
-        actions.player_movement = None;
+        actions.camera_movement = None;
     }
 }
 

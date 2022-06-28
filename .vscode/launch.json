@@ -18,13 +18,13 @@
             "cargo": {
                 "args": [
                     "build",
-                    "--bin=bevy_game",
-                    "--package=bevy_game",
+                    "--bin=npc-sim-bevy",
+                    "--package=npc-sim-bevy",
                     "--features",
                     "dev"
                 ],
                 "filter": {
-                    "name": "bevy_game",
+                    "name": "npc-sim-bevy",
                     "kind": "bin"
                 },
             },
@@ -47,13 +47,13 @@
                 "args": [
                     "test",
                     "--no-run",
-                    "--bin=bevy_game",
-                    "--package=bevy_game",
+                    "--bin=npc-sim-bevy",
+                    "--package=npc-sim-bevy",
                     "--features",
                     "dev"
                 ],
                 "filter": {
-                    "name": "bevy_game",
+                    "name": "npc-sim-bevy",
                     "kind": "bin"
                 }
             },
