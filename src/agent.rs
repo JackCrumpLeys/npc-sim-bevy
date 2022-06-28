@@ -1,5 +1,7 @@
+use std::ops::DerefMut;
 use crate::actions::Actions;
 use crate::loading::TextureAssets;
+use crate::windows::UiStates;
 use crate::GameState;
 use bevy::input::mouse::MouseWheel;
 use bevy::prelude::*;
@@ -20,15 +22,18 @@ impl Plugin for AgentPlugin {
                 .with_system(spawn_agent)
                 .with_system(spawn_camera),
         )
-        .add_system_set(SystemSet::on_update(GameState::Playing).with_system(update_agent))
-        .add_system_set(SystemSet::on_update(GameState::Playing).with_system(zoom_system))
-        .add_system_set(SystemSet::on_update(GameState::Playing).with_system(move_camera));
+        .add_system_set(
+            SystemSet::on_update(GameState::Playing)
+                .with_system(update_agent)
+                .with_system(zoom_system)
+                .with_system(move_camera),
+        );
     }
 }
 
 #[derive(Debug, Component)]
 pub struct Agent {
-    name: String,
+    pub name: String,
     lifespan: i64,
 }
 
@@ -49,12 +54,16 @@ fn spawn_agent(mut commands: Commands, textures: Res<TextureAssets>) {
         });
 }
 
-fn update_agent(mut agent_query: Query<(&Agent, &Transform, &Sprite)>,
-                mouse_input: Res<Input<MouseButton>>, windows: Res<Windows>,
-                mut camera_query: Query<(&Camera, &GlobalTransform), With<Camera2d>>) {
+fn update_agent(
+    mut agent_query: Query<(&Agent, &Transform, &Sprite, Entity)>,
+    mouse_input: Res<Input<MouseButton>>,
+    windows: Res<Windows>,
+    mut camera_query: Query<(&Camera, &GlobalTransform), With<Camera2d>>,
+    mut ui_states: ResMut<UiStates>,
+) {
     let win = windows.get_primary().expect("no primary window");
     if mouse_input.just_pressed(MouseButton::Left) {
-        if let Some(cursor_pos) = win.cursor_position(){
+        if let Some(cursor_pos) = win.cursor_position() {
             println!("click at {:?}", cursor_pos);
 
             // convert the cursor position to a world position
@@ -78,7 +87,8 @@ fn update_agent(mut agent_query: Query<(&Agent, &Transform, &Sprite)>,
                 let ndc = (screen_pos / window_size) * 2.0 - Vec2::ONE;
 
                 // matrix for undoing the projection and camera transform
-                let ndc_to_world = camera_transform.compute_matrix() * camera.projection_matrix.inverse();
+                let ndc_to_world =
+                    camera_transform.compute_matrix() * camera.projection_matrix.inverse();
 
                 // use it to convert ndc to world-space coordinates
                 let world_pos = ndc_to_world.project_point3(ndc.extend(-1.0));
@@ -88,29 +98,30 @@ fn update_agent(mut agent_query: Query<(&Agent, &Transform, &Sprite)>,
 
                 eprintln!("World coords: {}/{}", world_pos.x, world_pos.y);
 
-                for (agent, transform, sprite) in agent_query.iter() {
-
+                for (agent, transform, sprite, entity) in agent_query.iter() {
                     // println!("{:?}", agent)
-                    let agent:&Agent = agent;
-                    let transform:&Transform = transform;
-                    let sprite:&Sprite = sprite;
+                    let agent: &Agent = agent;
+                    let transform: &Transform = transform;
+                    let sprite: &Sprite = sprite;
 
                     println!("{:?}", transform);
 
-                    let scale_x:f32 = 300.0;
-                    let scale_y:f32 = 300.0;
-                    let pos_x:f32 = transform.translation.x;
-                    let pos_y:f32 = transform.translation.y;
+                    let scale_x: f32 = 300.0;
+                    let scale_y: f32 = 300.0;
+                    let pos_x: f32 = transform.translation.x;
+                    let pos_y: f32 = transform.translation.y;
 
                     // if the cursor is within the bounds of the agent then print the agent name
-                    if world_pos.x >= pos_x - scale_x/2.0 && world_pos.x <= pos_x + scale_x/2.0 &&
-                        world_pos.y >= pos_y - scale_y/2.0 && world_pos.y <= pos_y + scale_y/2.0 {
+                    if world_pos.x >= pos_x - scale_x / 2.0
+                        && world_pos.x <= pos_x + scale_x / 2.0
+                        && world_pos.y >= pos_y - scale_y / 2.0
+                        && world_pos.y <= pos_y + scale_y / 2.0
+                    {
                         println!("{}", agent.name);
+                        ui_states.deref_mut().agents.push(entity);
                     }
-
                 }
             }
-
         }
     }
 }

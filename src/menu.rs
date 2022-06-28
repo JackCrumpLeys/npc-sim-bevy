@@ -8,14 +8,11 @@ pub struct MenuPlugin;
 /// The menu is only drawn during the State `GameState::Menu` and is removed when that state is exited
 impl Plugin for MenuPlugin {
     fn build(&self, app: &mut App) {
-        app
-            .add_system_set(SystemSet::on_enter(GameState::Menu).with_system(go));
+        app.add_system_set(SystemSet::on_enter(GameState::Menu).with_system(go));
     }
 }
 
 /// placeholder
-fn go(
-    mut state: ResMut<State<GameState>>
-) {
+fn go(mut state: ResMut<State<GameState>>) {
     state.set(GameState::Playing).unwrap();
 }

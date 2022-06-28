@@ -1,39 +1,52 @@
-use bevy::prelude::*;
 use crate::agent::Agent;
+use crate::GameState;
+use bevy::prelude::*;
 use bevy_egui::{egui, EguiContext};
 use egui::{Rgba, RichText};
 
-struct UiPlugin;
+pub struct UiPlugin;
 
 impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<UiStates>();
+        app.insert_resource(UiStates::default())
+            .add_system_set(SystemSet::on_update(GameState::Playing).with_system(render_ui));
     }
 }
 
 #[derive(Default)]
-struct UiStates {
-    agents: Vec<Entity>,
+pub struct UiStates {
+    pub(crate) agents: Vec<Entity>,
 }
 
 //render windows using egui for every agent in the Ui states
-fn render_ui(mut ui_states: ResMut<UiStates>,
-             mut agents: Query<&Agent>,
-             mut egui_context: ResMut<EguiContext>,
-             mut commands: Commands) {
-    let mut agents_to_remove = Vec::new();
-    for (agent, transform, sprite) in (&mut agents, &mut agents.transform(), &mut agents.sprite()).iter() {
-        let mut agent_ui = egui_context.agent_ui_mut(agent);
-        agent_ui.set_position(transform.translation.x, transform.translation.y);
-        agent_ui.set_size(sprite.width(), sprite.height());
-        agent_ui.set_color(Rgba::new(1.0, 1.0, 1.0, 1.0));
-        agent_ui.set_text(RichText::new(format!("{}", agent.name)));
-        agent_ui.set_visible(true);
-        if agent_ui.is_clicked() {
-            agents_to_remove.push(agent);
-        }
-    }
-    for agent in agents_to_remove {
-        agents.remove_entity(agent);
+fn render_ui(
+    ui_states: Res<UiStates>,
+    mut agents: Query<(&Agent, &mut Transform)>,
+    mut egui_context: ResMut<EguiContext>,
+) {
+    ui_states.agents.drain(..).collect::<Entity>();
+    for entity in ui_states.agents.iter() {
+        println!("{:?}", entity);
+        egui::Window::new("Player Diagnostics").show(egui_context.ctx_mut(), |ui| {
+            let (agent, mut agent_transform) = agents.get_mut(*entity).unwrap();
+
+            ui.strong(format!("agent {}", agent.name));
+            ui.label(format!(
+                "Location {:.2},{:.2}",
+                agent_transform.translation.x, agent_transform.translation.y
+            ));
+            ui.add(
+                egui::Slider::new::<f32>(&mut agent_transform.translation.x, -50.0..=50.0)
+                    .text("Translation X"),
+            );
+            ui.add(
+                egui::Slider::new::<f32>(&mut agent_transform.translation.y, -50.0..=50.0)
+                    .text("Translation Y"),
+            );
+
+            if ui.button("Reset position").clicked() {
+                agent_transform.translation = Vec3::default();
+            }
+        });
     }
 }
