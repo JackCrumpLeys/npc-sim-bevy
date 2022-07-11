@@ -1,3 +1,4 @@
+mod camera;
 mod actions;
 mod agent;
 mod loading;
@@ -7,13 +8,13 @@ mod windows;
 use crate::actions::ActionsPlugin;
 use crate::agent::AgentPlugin;
 use crate::menu::MenuPlugin;
+use crate::windows::UiPlugin;
 use bevy::app::App;
 #[cfg(debug_assertions)]
 use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
 use bevy::prelude::*;
 use bevy_egui::EguiPlugin;
-use crate::windows::{UiPlugin, UiStates};
-
+use crate::camera::CameraPlugin;
 
 // This example game uses States to separate logic
 // See https://bevy-cheatbook.github.io/programming/states.html
@@ -38,7 +39,8 @@ impl Plugin for GamePlugin {
             .add_plugin(AgentPlugin)
             .add_plugin(MenuPlugin)
             .add_plugin(EguiPlugin)
-            .add_plugin(ActionsPlugin);
+            .add_plugin(ActionsPlugin)
+            .add_plugin(CameraPlugin);
 
         #[cfg(debug_assertions)]
         {

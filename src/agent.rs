@@ -1,33 +1,18 @@
 use std::ops::DerefMut;
-use crate::actions::Actions;
+
 use crate::loading::TextureAssets;
 use crate::windows::UiStates;
 use crate::GameState;
-use bevy::input::mouse::MouseWheel;
+
 use bevy::prelude::*;
 use bevy::render::camera::{Camera2d, RenderTarget};
-use bevy_egui::{egui, EguiContext};
-use egui::{Rgba, RichText};
 
 pub struct AgentPlugin;
 
-const ZOOM_SPEED: f32 = 0.5;
-const MIN_ZOOM: f32 = 1.0;
-const MAX_ZOOM: f32 = 100.0;
-
 impl Plugin for AgentPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system_set(
-            SystemSet::on_enter(GameState::Playing)
-                .with_system(spawn_agent)
-                .with_system(spawn_camera),
-        )
-        .add_system_set(
-            SystemSet::on_update(GameState::Playing)
-                .with_system(update_agent)
-                .with_system(zoom_system)
-                .with_system(move_camera),
-        );
+        app.add_system_set(SystemSet::on_enter(GameState::Playing).with_system(spawn_agent))
+            .add_system_set(SystemSet::on_update(GameState::Playing).with_system(update_agent));
     }
 }
 
@@ -35,10 +20,6 @@ impl Plugin for AgentPlugin {
 pub struct Agent {
     pub name: String,
     lifespan: i64,
-}
-
-fn spawn_camera(mut commands: Commands) {
-    commands.spawn_bundle(OrthographicCameraBundle::new_2d());
 }
 
 fn spawn_agent(mut commands: Commands, textures: Res<TextureAssets>) {
@@ -55,10 +36,10 @@ fn spawn_agent(mut commands: Commands, textures: Res<TextureAssets>) {
 }
 
 fn update_agent(
-    mut agent_query: Query<(&Agent, &Transform, &Sprite, Entity)>,
+    agent_query: Query<(&Agent, &Transform, &Sprite, Entity)>,
     mouse_input: Res<Input<MouseButton>>,
     windows: Res<Windows>,
-    mut camera_query: Query<(&Camera, &GlobalTransform), With<Camera2d>>,
+    camera_query: Query<(&Camera, &GlobalTransform), With<Camera2d>>,
     mut ui_states: ResMut<UiStates>,
 ) {
     let win = windows.get_primary().expect("no primary window");
@@ -102,7 +83,7 @@ fn update_agent(
                     // println!("{:?}", agent)
                     let agent: &Agent = agent;
                     let transform: &Transform = transform;
-                    let sprite: &Sprite = sprite;
+                    let _sprite: &Sprite = sprite;
 
                     println!("{:?}", transform);
 
@@ -117,57 +98,13 @@ fn update_agent(
                         && world_pos.y >= pos_y - scale_y / 2.0
                         && world_pos.y <= pos_y + scale_y / 2.0
                     {
+                        if !ui_states.agents.contains(&entity){
+                            ui_states.deref_mut().agents.push(entity);
+                        }
                         println!("{}", agent.name);
-                        ui_states.deref_mut().agents.push(entity);
                     }
                 }
             }
         }
     }
-}
-
-fn move_camera(
-    time: Res<Time>,
-    actions: Res<Actions>,
-    mut camera_query: Query<&mut Transform, With<Camera2d>>,
-) {
-    if actions.camera_movement.is_none() {
-        return;
-    }
-    let speed = 1500.0;
-    let movement = Vec3::new(
-        actions.camera_movement.unwrap().x * speed * time.delta_seconds(),
-        actions.camera_movement.unwrap().y * speed * time.delta_seconds(),
-        0.,
-    );
-    for mut camera_transform in camera_query.iter_mut() {
-        camera_transform.translation += movement;
-    }
-}
-
-fn zoom_system(
-    mut whl: EventReader<MouseWheel>,
-    mut cam: Query<(&mut Transform, &mut OrthographicProjection), With<Camera2d>>,
-    windows: Res<Windows>,
-) {
-    let delta_zoom: f32 = whl.iter().map(|e| e.y).sum();
-    if delta_zoom == 0. {
-        return;
-    }
-
-    let (mut pos, mut cam) = cam.single_mut();
-
-    let window = windows.get_primary().unwrap();
-    let window_size = Vec2::new(window.width(), window.height());
-    let mouse_normalized_screen_pos =
-        (window.cursor_position().unwrap() / window_size) * 2. - Vec2::ONE;
-    let mouse_world_pos = pos.translation.truncate()
-        + mouse_normalized_screen_pos * Vec2::new(cam.right, cam.top) * cam.scale;
-
-    cam.scale -= ZOOM_SPEED * delta_zoom * cam.scale;
-    cam.scale = cam.scale.clamp(MIN_ZOOM, MAX_ZOOM);
-
-    pos.translation = (mouse_world_pos
-        - mouse_normalized_screen_pos * Vec2::new(cam.right, cam.top) * cam.scale)
-        .extend(pos.translation.z);
 }

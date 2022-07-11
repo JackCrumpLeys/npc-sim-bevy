@@ -1,4 +1,3 @@
-use crate::loading::FontAssets;
 use crate::GameState;
 use bevy::prelude::*;
 
