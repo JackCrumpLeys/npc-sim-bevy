@@ -1,3 +1,4 @@
+use std::f32::consts::FRAC_PI_2;
 use std::ops::DerefMut;
 
 use crate::loading::TextureAssets;
@@ -12,6 +13,7 @@ pub struct AgentPlugin;
 impl Plugin for AgentPlugin {
     fn build(&self, app: &mut App) {
         app.add_system_set(SystemSet::on_enter(GameState::Playing).with_system(spawn_agent))
+            .add_system_set(SystemSet::on_update(GameState::Playing).with_system(click_agent))
             .add_system_set(SystemSet::on_update(GameState::Playing).with_system(update_agent));
     }
 }
@@ -19,24 +21,43 @@ impl Plugin for AgentPlugin {
 #[derive(Debug, Component)]
 pub struct Agent {
     pub name: String,
-    lifespan: i64,
+    pub destination: Option<Vec2>,
 }
 
 fn spawn_agent(mut commands: Commands, textures: Res<TextureAssets>) {
     commands
         .spawn_bundle(SpriteBundle {
             texture: textures.texture_bevy.clone(),
-            transform: Transform::from_translation(Vec3::new(0., 0., 1.)),
+            transform: Transform::from_translation(Vec3::new(1., 1., 1.)),
             ..Default::default()
         })
         .insert(Agent {
             name: "john".to_string(),
-            lifespan: 0,
+            destination: None,
         });
 }
 
-fn update_agent(
-    agent_query: Query<(&Agent, &Transform, &Sprite, Entity)>,
+fn update_agent(mut agent_query: Query<(&Agent, &mut Transform)>, time: Res<Time>) {
+    for (agent, mut transform) in agent_query.iter_mut() {
+        let mut transform: Mut<Transform> = transform;
+        let agent: &Agent = agent;
+
+        if let Some(destination) = agent.destination {
+
+            let diff = destination - transform.translation.truncate();
+            let angle = diff.y.atan2(diff.x); // Add/sub FRAC_PI here optionally
+            transform.rotation = Quat::from_axis_angle(Vec3::new(0., 0., 1.), angle);
+
+
+            let move_dir = transform.local_x() * 100.0 * time.delta_seconds();
+            transform.translation += move_dir;
+        }
+
+    }
+}
+
+fn click_agent(
+    mut agent_query: Query<(&mut Agent, &Transform, &Sprite, Entity)>,
     mouse_input: Res<Input<MouseButton>>,
     windows: Res<Windows>,
     camera_query: Query<(&Camera, &GlobalTransform), With<Camera2d>>,
@@ -45,7 +66,7 @@ fn update_agent(
     let win = windows.get_primary().expect("no primary window");
     if mouse_input.just_pressed(MouseButton::Left) {
         if let Some(cursor_pos) = win.cursor_position() {
-            println!("click at {:?}", cursor_pos);
+            // println!("click at {:?}", cursor_pos);
 
             // convert the cursor position to a world position
             // get the camera info and transform
@@ -77,15 +98,16 @@ fn update_agent(
                 // reduce it to a 2D value
                 let world_pos: Vec2 = world_pos.truncate();
 
-                eprintln!("World coords: {}/{}", world_pos.x, world_pos.y);
+                // println!("World coords: {}/{}", world_pos.x, world_pos.y);
 
-                for (agent, transform, sprite, entity) in agent_query.iter() {
+                for (mut agent, transform, sprite, entity) in agent_query.iter_mut() {
                     // println!("{:?}", agent)
-                    let agent: &Agent = agent;
+                    let mut agent: Mut<Agent> = agent;
                     let transform: &Transform = transform;
                     let _sprite: &Sprite = sprite;
 
-                    println!("{:?}", transform);
+                    // println!("{:?}", transform);
+                    agent.destination = Some(world_pos);
 
                     let scale_x: f32 = 300.0;
                     let scale_y: f32 = 300.0;
@@ -101,7 +123,7 @@ fn update_agent(
                         if !ui_states.agents.contains(&entity){
                             ui_states.deref_mut().agents.push(entity);
                         }
-                        println!("{}", agent.name);
+                        // println!("{}", agent.name);
                     }
                 }
             }
