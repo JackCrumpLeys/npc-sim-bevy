@@ -7,6 +7,10 @@ use crate::GameState;
 
 use bevy::prelude::*;
 use bevy::render::camera::{Camera2d, RenderTarget};
+use bevy_egui::EguiContext;
+use bevy_prototype_lyon::draw::{DrawMode, FillMode, StrokeMode};
+use bevy_prototype_lyon::geometry::GeometryBuilder;
+use bevy_prototype_lyon::shapes;
 
 pub struct AgentPlugin;
 
@@ -14,6 +18,7 @@ impl Plugin for AgentPlugin {
     fn build(&self, app: &mut App) {
         app.add_system_set(SystemSet::on_enter(GameState::Playing).with_system(spawn_agent))
             .add_system_set(SystemSet::on_update(GameState::Playing).with_system(click_agent))
+            .insert_resource(Msaa { samples: 4 })
             .add_system_set(SystemSet::on_update(GameState::Playing).with_system(update_agent));
     }
 }
@@ -25,6 +30,8 @@ pub struct Agent {
 }
 
 fn spawn_agent(mut commands: Commands, textures: Res<TextureAssets>) {
+
+
     commands
         .spawn_bundle(SpriteBundle {
             texture: textures.texture_bevy.clone(),
@@ -37,10 +44,16 @@ fn spawn_agent(mut commands: Commands, textures: Res<TextureAssets>) {
         });
 }
 
-fn update_agent(mut agent_query: Query<(&Agent, &mut Transform)>, time: Res<Time>) {
-    for (agent, mut transform) in agent_query.iter_mut() {
-        let mut transform: Mut<Transform> = transform;
-        let agent: &Agent = agent;
+#[derive(Debug, Component)]
+pub struct DestinationMarker;
+
+fn update_agent(mut agent_query: Query<(&mut Agent, Entity)>, destination_visual_query: Query<Entity, With<DestinationMarker>>, mut transform_q: Query<&mut Transform>, time: Res<Time>, mut commands: Commands) {
+    let mut valid_dests: Vec<Entity> = Vec::new();
+
+    for (mut agent, mut entity) in agent_query.iter_mut() {
+        let mut transform: Mut<Transform> = transform_q.get_mut(entity).unwrap();
+        let mut agent: Mut<Agent> = agent;
+
 
         if let Some(destination) = agent.destination {
 
@@ -49,10 +62,49 @@ fn update_agent(mut agent_query: Query<(&Agent, &mut Transform)>, time: Res<Time
             transform.rotation = Quat::from_axis_angle(Vec3::new(0., 0., 1.), angle);
 
 
-            let move_dir = transform.local_x() * 100.0 * time.delta_seconds();
+            let move_dir = transform.local_x() * 1000.0 * time.delta_seconds();
             transform.translation += move_dir;
-        }
 
+            let scale_x: f32 = 20.0;
+            let scale_y: f32 = 20.0;
+            let pos_x: f32 = transform.translation.x;
+            let pos_y: f32 = transform.translation.y;
+
+            // if the destination is within the bounds of the agent then print the agent name
+            if destination.x >= pos_x - scale_x / 2.0
+                && destination.x <= pos_x + scale_x / 2.0
+                && destination.y >= pos_y - scale_y / 2.0
+                && destination.y <= pos_y + scale_y / 2.0
+            {
+                agent.destination = None;
+            }
+
+            let destination_visual: Option<(&Transform, Entity)> = destination_visual_query.iter().map(|entity| (transform_q.get(entity).unwrap(), entity)).find(|(T,_)| T.translation.y == destination.y && T.translation.x == destination.x );
+
+            if destination_visual.is_none(){
+                let shape = shapes::RegularPolygon {
+                    sides: 6,
+                    feature: shapes::RegularPolygonFeature::Radius(200.0),
+                    ..shapes::RegularPolygon::default()
+                };
+
+                commands.spawn_bundle(GeometryBuilder::build_as(
+                    &shape,
+                    DrawMode::Outlined {
+                        fill_mode: FillMode::color(Color::CYAN),
+                        outline_mode: StrokeMode::new(Color::BLACK, 10.0),
+                    },
+                    Transform::from_translation(destination.extend(0.0)),
+                )).insert(DestinationMarker);
+            } else if let Some((_,entity)) = destination_visual {
+                valid_dests.push(entity);
+            }
+        }
+    }
+    for dest in destination_visual_query.iter() {
+        if !valid_dests.contains(&dest) {
+            commands.entity(dest).despawn();
+        }
     }
 }
 
@@ -62,6 +114,7 @@ fn click_agent(
     windows: Res<Windows>,
     camera_query: Query<(&Camera, &GlobalTransform), With<Camera2d>>,
     mut ui_states: ResMut<UiStates>,
+    egui_context: Res<EguiContext>,
 ) {
     let win = windows.get_primary().expect("no primary window");
     if mouse_input.just_pressed(MouseButton::Left) {
@@ -107,7 +160,9 @@ fn click_agent(
                     let _sprite: &Sprite = sprite;
 
                     // println!("{:?}", transform);
-                    agent.destination = Some(world_pos);
+                    if !egui_context.ctx().wants_pointer_input() {
+                        agent.destination = Some(world_pos);
+                    }
 
                     let scale_x: f32 = 300.0;
                     let scale_y: f32 = 300.0;
