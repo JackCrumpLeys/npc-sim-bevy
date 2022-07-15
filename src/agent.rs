@@ -1,4 +1,4 @@
-use std::f32::consts::FRAC_PI_2;
+
 use std::ops::DerefMut;
 
 use crate::loading::TextureAssets;
@@ -50,7 +50,7 @@ pub struct DestinationMarker;
 fn update_agent(mut agent_query: Query<(&mut Agent, Entity)>, destination_visual_query: Query<Entity, With<DestinationMarker>>, mut transform_q: Query<&mut Transform>, time: Res<Time>, mut commands: Commands) {
     let mut valid_dests: Vec<Entity> = Vec::new();
 
-    for (mut agent, mut entity) in agent_query.iter_mut() {
+    for (agent, entity) in agent_query.iter_mut() {
         let mut transform: Mut<Transform> = transform_q.get_mut(entity).unwrap();
         let mut agent: Mut<Agent> = agent;
 
@@ -80,7 +80,7 @@ fn update_agent(mut agent_query: Query<(&mut Agent, Entity)>, destination_visual
                 agent.destination = None;
             }
 
-            let destination_visual: Option<(&Transform, Entity)> = destination_visual_query.iter().map(|entity| (transform_q.get(entity).unwrap(), entity)).find(|(T,_)| T.translation.y == destination.y && T.translation.x == destination.x );
+            let destination_visual: Option<(&Transform, Entity)> = destination_visual_query.iter().map(|entity| (transform_q.get(entity).unwrap(), entity)).find(|(t,_)| t.translation.y == destination.y && t.translation.x == destination.x );
 
             if destination_visual.is_none(){
                 let shape = shapes::RegularPolygon {
@@ -119,7 +119,7 @@ fn click_agent(
 ) {
     let win = windows.get_primary().expect("no primary window");
     if mouse_input.just_pressed(MouseButton::Left) {
-        if let Some(cursor_pos) = win.cursor_position() {
+        if let Some(_cursor_pos) = win.cursor_position() {
             // println!("click at {:?}", cursor_pos);
 
             // convert the cursor position to a world position
@@ -154,7 +154,7 @@ fn click_agent(
 
                 // println!("World coords: {}/{}", world_pos.x, world_pos.y);
 
-                for (mut agent, transform, sprite, entity) in agent_query.iter_mut() {
+                for (agent, transform, sprite, entity) in agent_query.iter_mut() {
                     // println!("{:?}", agent)
                     let mut agent: Mut<Agent> = agent;
                     let transform: &Transform = transform;
@@ -169,17 +169,13 @@ fn click_agent(
                     let scale_y: f32 = 300.0;
                     let pos_x: f32 = transform.translation.x;
                     let pos_y: f32 = transform.translation.y;
-
-                    // if the cursor is within the bounds of the agent then print the agent name
                     if world_pos.x >= pos_x - scale_x / 2.0
                         && world_pos.x <= pos_x + scale_x / 2.0
                         && world_pos.y >= pos_y - scale_y / 2.0
                         && world_pos.y <= pos_y + scale_y / 2.0
+                        && !ui_states.agents.contains(&entity)
                     {
-                        if !ui_states.agents.contains(&entity){
-                            ui_states.deref_mut().agents.push(entity);
-                        }
-                        // println!("{}", agent.name);
+                        ui_states.deref_mut().agents.push(entity);
                     }
                 }
             }

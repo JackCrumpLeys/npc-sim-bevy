@@ -3,8 +3,8 @@ use crate::actions::Actions;
 use crate::GameState;
 use bevy::input::mouse::{MouseMotion, MouseWheel};
 use bevy::prelude::*;
-use bevy::render::camera::{Camera2d, RenderTarget};
-use itertools::Itertools;
+use bevy::render::camera::{Camera2d};
+
 
 pub struct CameraPlugin;
 
@@ -24,12 +24,6 @@ impl Plugin for CameraPlugin {
                     .with_system(move_camera),
             );
     }
-}
-
-#[derive(Debug, Component)]
-pub struct Agent {
-    pub name: String,
-    lifespan: i64,
 }
 
 fn spawn_camera(mut commands: Commands) {
@@ -58,8 +52,8 @@ fn move_camera(
 fn zoom_system(
     mut mouse_wheel: EventReader<MouseWheel>,
     mut mouse_motion: EventReader<MouseMotion>,
-    mut mouse_button: ResMut<Input<MouseButton>>,
-    mut keyboard_input: ResMut<Input<KeyCode>>,
+    mouse_button: ResMut<Input<MouseButton>>,
+    keyboard_input: ResMut<Input<KeyCode>>,
     mut cam: Query<(&mut Transform, &mut OrthographicProjection), With<Camera2d>>,
     windows: Res<Windows>,
 ) {

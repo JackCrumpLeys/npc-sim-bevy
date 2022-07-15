@@ -2,7 +2,7 @@ use crate::agent::Agent;
 use crate::GameState;
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContext};
-use itertools::Itertools;
+
 
 pub struct UiPlugin;
 
@@ -20,7 +20,7 @@ pub struct UiStates {
 
 //render windows using egui for every agent in the Ui states
 fn render_ui(
-    mut ui_states: ResMut<UiStates>,
+    ui_states: ResMut<UiStates>,
     mut agents: Query<(&mut Agent, &mut Transform)>,
     mut egui_context: ResMut<EguiContext>,
 ) {
@@ -50,7 +50,7 @@ fn render_ui(
             });
 
             ui.collapsing("agent", |ui| {
-                let mut destination_toggled = !agent.destination.is_none();
+                let mut destination_toggled = agent.destination.is_some();
                 let _destination_toggle = ui.checkbox(&mut destination_toggled, "have a destination?");
 
                 if agent.destination.is_none() && destination_toggled {
