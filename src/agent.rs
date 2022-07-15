@@ -1,4 +1,3 @@
-
 use std::ops::DerefMut;
 
 use crate::loading::TextureAssets;
@@ -30,8 +29,6 @@ pub struct Agent {
 }
 
 fn spawn_agent(mut commands: Commands, textures: Res<TextureAssets>) {
-
-
     commands
         .spawn_bundle(SpriteBundle {
             texture: textures.texture_bevy.clone(),
@@ -47,21 +44,24 @@ fn spawn_agent(mut commands: Commands, textures: Res<TextureAssets>) {
 #[derive(Debug, Component)]
 pub struct DestinationMarker;
 
-fn update_agent(mut agent_query: Query<(&mut Agent, Entity)>, destination_visual_query: Query<Entity, With<DestinationMarker>>, mut transform_q: Query<&mut Transform>, time: Res<Time>, mut commands: Commands) {
+fn update_agent(
+    mut agent_query: Query<(&mut Agent, Entity)>,
+    destination_visual_query: Query<Entity, With<DestinationMarker>>,
+    mut transform_q: Query<&mut Transform>,
+    time: Res<Time>,
+    mut commands: Commands,
+) {
     let mut valid_dests: Vec<Entity> = Vec::new();
 
     for (agent, entity) in agent_query.iter_mut() {
         let mut transform: Mut<Transform> = transform_q.get_mut(entity).unwrap();
         let mut agent: Mut<Agent> = agent;
 
-
         if let Some(destination) = agent.destination {
-
             // mu life is broken
             let diff = destination - transform.translation.truncate();
             let angle = diff.y.atan2(diff.x);
             transform.rotation = Quat::from_axis_angle(Vec3::new(0., 0., 1.), angle);
-
 
             let move_dir = transform.local_x() * 1000.0 * time.delta_seconds();
             transform.translation += move_dir;
@@ -80,24 +80,31 @@ fn update_agent(mut agent_query: Query<(&mut Agent, Entity)>, destination_visual
                 agent.destination = None;
             }
 
-            let destination_visual: Option<(&Transform, Entity)> = destination_visual_query.iter().map(|entity| (transform_q.get(entity).unwrap(), entity)).find(|(t,_)| t.translation.y == destination.y && t.translation.x == destination.x );
+            let destination_visual: Option<(&Transform, Entity)> = destination_visual_query
+                .iter()
+                .map(|entity| (transform_q.get(entity).unwrap(), entity))
+                .find(|(t, _)| {
+                    t.translation.y == destination.y && t.translation.x == destination.x
+                });
 
-            if destination_visual.is_none(){
+            if destination_visual.is_none() {
                 let shape = shapes::RegularPolygon {
                     sides: 6,
                     feature: shapes::RegularPolygonFeature::Radius(200.0),
                     ..shapes::RegularPolygon::default()
                 };
 
-                commands.spawn_bundle(GeometryBuilder::build_as(
-                    &shape,
-                    DrawMode::Outlined {
-                        fill_mode: FillMode::color(Color::CYAN),
-                        outline_mode: StrokeMode::new(Color::BLACK, 10.0),
-                    },
-                    Transform::from_translation(destination.extend(0.0)),
-                )).insert(DestinationMarker);
-            } else if let Some((_,entity)) = destination_visual {
+                commands
+                    .spawn_bundle(GeometryBuilder::build_as(
+                        &shape,
+                        DrawMode::Outlined {
+                            fill_mode: FillMode::color(Color::CYAN),
+                            outline_mode: StrokeMode::new(Color::BLACK, 10.0),
+                        },
+                        Transform::from_translation(destination.extend(0.0)),
+                    ))
+                    .insert(DestinationMarker);
+            } else if let Some((_, entity)) = destination_visual {
                 valid_dests.push(entity);
             }
         }

@@ -3,8 +3,7 @@ use crate::actions::Actions;
 use crate::GameState;
 use bevy::input::mouse::{MouseMotion, MouseWheel};
 use bevy::prelude::*;
-use bevy::render::camera::{Camera2d};
-
+use bevy::render::camera::Camera2d;
 
 pub struct CameraPlugin;
 
@@ -95,7 +94,6 @@ fn zoom_system(
     }
 
     pan *= cam.scale * (PAN_SPEED + pan_modifier);
-
 
     pos.translation.x -= pan.x;
     pos.translation.y += pan.y;
