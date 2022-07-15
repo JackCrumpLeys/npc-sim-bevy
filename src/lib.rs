@@ -11,13 +11,13 @@ use crate::agent::AgentPlugin;
 use crate::camera::CameraPlugin;
 use crate::menu::MenuPlugin;
 use crate::windows::UiPlugin;
+use crate::zone::ZonePlugin;
 use bevy::app::App;
 #[cfg(debug_assertions)]
 use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
 use bevy::prelude::*;
 use bevy_egui::EguiPlugin;
 use bevy_prototype_lyon::plugin::ShapePlugin;
-use crate::zone::ZonePlugin;
 
 // This example game uses States to separate logic
 // See https://bevy-cheatbook.github.io/programming/states.html
