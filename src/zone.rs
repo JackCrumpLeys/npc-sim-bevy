@@ -6,8 +6,8 @@ use bevy::render::camera::Camera2d;
 use bevy_prototype_lyon::entity::ShapeBundle;
 use bevy_prototype_lyon::prelude::*;
 use bevy_prototype_lyon::render::Shape;
-use std::collections::HashMap;
 use itertools::Itertools;
+use std::collections::HashMap;
 
 pub struct ZonePlugin;
 
@@ -38,18 +38,20 @@ fn update_zones(
     mut zone_mapping: ResMut<AgentZoneMapping>,
 ) {
     let mut zone_mappings = &mut zone_mapping.map;
-    let zone_list: Vec<(Entity)> = zones.iter().map(|(e,_)| e).collect_vec();
-    let agent_with_transform: Vec<(Entity, &Transform)> = agents.iter().map(|e| (e, transform_q.get(e).unwrap())).collect_vec();
+    let zone_list: Vec<(Entity)> = zones.iter().map(|(e, _)| e).collect_vec();
+    let agent_with_transform: Vec<(Entity, &Transform)> = agents
+        .iter()
+        .map(|e| (e, transform_q.get(e).unwrap()))
+        .collect_vec();
 
     for entity in &zone_list {
         zone_mappings.entry(*entity).or_insert(vec![]);
     }
 
-
     for (zone_entity, agents) in zone_mappings.clone().iter() {
         if !zone_list.contains(zone_entity) {
             zone_mappings.remove(zone_entity);
-            continue
+            continue;
         }
     }
 
@@ -65,9 +67,13 @@ fn update_zones(
             if zone_transform.translation.x >= pos_x - scale_x / 2.0
                 && zone_transform.translation.x <= pos_x + scale_x / 2.0
                 && zone_transform.translation.y >= pos_y - scale_y / 2.0
-                && zone_transform.translation.y <= pos_y + scale_y / 2.0 {
+                && zone_transform.translation.y <= pos_y + scale_y / 2.0
+            {
                 println!("{:?} is in {:?}", agent_entity, zone.name);
-                zone_mappings.get_mut(&zone_entity).unwrap().push(*agent_entity)
+                zone_mappings
+                    .get_mut(&zone_entity)
+                    .unwrap()
+                    .push(*agent_entity)
             }
         }
     }
