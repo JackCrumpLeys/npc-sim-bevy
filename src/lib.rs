@@ -14,6 +14,7 @@ use bevy::app::App;
 use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
 use bevy::prelude::*;
 use bevy_egui::EguiPlugin;
+use bevy_prototype_lyon::plugin::ShapePlugin;
 use crate::camera::CameraPlugin;
 
 // This example game uses States to separate logic
@@ -40,6 +41,7 @@ impl Plugin for GamePlugin {
             .add_plugin(MenuPlugin)
             .add_plugin(EguiPlugin)
             .add_plugin(ActionsPlugin)
+            .add_plugin(ShapePlugin)
             .add_plugin(CameraPlugin);
 
         #[cfg(debug_assertions)]
