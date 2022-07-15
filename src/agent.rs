@@ -16,9 +16,8 @@ pub struct AgentPlugin;
 impl Plugin for AgentPlugin {
     fn build(&self, app: &mut App) {
         app.add_system_set(SystemSet::on_enter(GameState::Playing).with_system(spawn_agent))
-            .add_system_set(SystemSet::on_update(GameState::Playing).with_system(click_agent))
-            .insert_resource(Msaa { samples: 4 })
-            .add_system_set(SystemSet::on_update(GameState::Playing).with_system(update_agent));
+            .add_system_set(SystemSet::on_update(GameState::Playing).with_system(click_agent).with_system(update_agent))
+            .insert_resource(Msaa { samples: 4 });
     }
 }
 
