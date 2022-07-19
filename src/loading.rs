@@ -21,12 +21,24 @@ impl Plugin for LoadingPlugin {
 // when done loading, they will be inserted as resources (see https://github.com/NiklasEi/bevy_asset_loader)
 
 #[derive(AssetCollection)]
+/// `FontAssets` is a struct that contains a single field, `fira_sans`, which is a `Handle<Font>` that
+/// is loaded from the file `fonts/FiraSans-Bold.ttf`.
+///
+/// Properties:
+///
+/// * `fira_sans`: The name of the property that will be used to access the font asset.
 pub struct FontAssets {
     #[asset(path = "fonts/FiraSans-Bold.ttf")]
     pub fira_sans: Handle<Font>,
 }
 
 #[derive(AssetCollection)]
+/// `TextureAssets` is a type that contains a `Handle<Image>` field named `texture_bevy` that is loaded
+/// from the `textures/bevy.png` asset.
+///
+/// Properties:
+///
+/// * `texture_bevy`: The name of the property that will be used to access the texture.
 pub struct TextureAssets {
     #[asset(path = "textures/bevy.png")]
     pub texture_bevy: Handle<Image>,

@@ -23,6 +23,8 @@ use bevy_prototype_lyon::plugin::ShapePlugin;
 // See https://bevy-cheatbook.github.io/programming/states.html
 // Or https://github.com/bevyengine/bevy/blob/main/examples/ecs/state.rs
 #[derive(Clone, Eq, PartialEq, Debug, Hash)]
+/// the different `GameState` that can be one of three values: `Loading`, `Playing`, or
+/// `Menu`.
 enum GameState {
     // During the loading State the LoadingPlugin will load our assets
     Loading,
@@ -35,6 +37,13 @@ enum GameState {
 pub struct GamePlugin;
 
 impl Plugin for GamePlugin {
+    /// `app.add_state(GameState::Loading)`
+    ///
+    /// The `app` is the main application object. It's the main entry point for all the plugins
+    ///
+    /// Arguments:
+    ///
+    /// * `app`: &mut App - this is the main application object.
     fn build(&self, app: &mut App) {
         app.add_state(GameState::Loading)
             .add_plugin(UiPlugin)

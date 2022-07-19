@@ -14,6 +14,12 @@ use bevy_prototype_lyon::shapes;
 pub struct AgentPlugin;
 
 impl Plugin for AgentPlugin {
+    /// `build` is a function that takes a mutable reference to an `App` and adds a systems to it.
+    /// these systems control agents in the data driven model
+    ///
+    /// Arguments:
+    ///
+    /// * `app`: The application instance.
     fn build(&self, app: &mut App) {
         app.add_system_set(SystemSet::on_enter(GameState::Playing).with_system(spawn_agent))
             .add_system_set(
@@ -25,12 +31,30 @@ impl Plugin for AgentPlugin {
     }
 }
 
+/// `Agent` is a struct that has a `name` field of type `String` and a `destination` field of type
+/// `Option<Vec2>`.
+///
+/// The `Option<T>` type is a generic type that can be either `Some(T)` or `None`. It's used to
+/// represent the possibility of a value being absent.
+///
+/// The `Vec2` type is a struct that has two fields: `x` and `y`.
+///
+/// Properties:
+///
+/// * `name`: The name of the agent.
+/// * `destination`: The destination the agent is trying to reach.
 #[derive(Debug, Component)]
 pub struct Agent {
     pub name: String,
     pub destination: Option<Vec2>,
 }
 
+/// `spawn_agent` spawns a new agent with a sprite and a name
+///
+/// Arguments:
+///
+/// * `commands`: Commands - This is the list of commands that bevy completes and is used to to spawn an entity in this example.
+/// * `textures`: Res<TextureAssets> - resource containing texture assets used to give the entity a texture.
 fn spawn_agent(mut commands: Commands, textures: Res<TextureAssets>) {
     commands
         .spawn_bundle(SpriteBundle {
@@ -47,6 +71,17 @@ fn spawn_agent(mut commands: Commands, textures: Res<TextureAssets>) {
 #[derive(Debug, Component)]
 pub struct DestinationMarker;
 
+/// `update_agent` updates the agent's position and rotation in accordance with destination
+/// This is checking if the agent has reached its destination and if it has then it deletes the
+/// destination.
+///
+/// Arguments:
+///
+/// * `agent_query`: Query<(&mut Agent, Entity)> - query containing agents and their entities.
+/// * `destination_visual_query`: Query<Entity, With<DestinationMarker>> - query containing entities with the destination marker.
+/// * `transform_q`: Query<&mut Transform> - query containing transforms.
+/// * `time`: Res<Time> - resource containing the time, used to get delta time between frames.
+/// * `commands`: Commands - This is the list of commands that bevy completes and is used to to de-spawn and create entities in this example.
 fn update_agent(
     mut agent_query: Query<(&mut Agent, Entity)>,
     destination_visual_query: Query<Entity, With<DestinationMarker>>,
@@ -119,6 +154,18 @@ fn update_agent(
     }
 }
 
+/// 'click_agent' converts the mouse click position to
+/// a world position, and then checks if the click was inside
+/// the bounding box of any agents. If it was, it adds the agent to the list of selected agents
+///
+/// Arguments:
+///
+/// * `agent_query`: Query<(&mut Agent, &Transform, &Sprite, Entity)> - query containing agents, their transforms, their sprites, and their entities.
+/// * `mouse_input`: Res<Input<MouseButton>> - resource containing mouse button inputs.
+/// * `windows`: Res<Windows> - resource containing all of the windows.
+/// * `camera_query`: Query<(&Camera, &GlobalTransform), With<Camera2d>> - query containing the camera and its global transform.
+/// * `ui_states`: ResMut<UiStates> - resource containing a list of entities that are being rendered in the user interface.
+/// * `egui_context`: Res<EguiContext> - resource containing the context for the Egui user interface.
 fn click_agent(
     mut agent_query: Query<(&mut Agent, &Transform, &Sprite, Entity)>,
     mouse_input: Res<Input<MouseButton>>,

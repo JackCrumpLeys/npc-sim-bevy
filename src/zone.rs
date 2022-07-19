@@ -19,6 +19,14 @@ impl Plugin for ZonePlugin {
 }
 
 #[derive(Debug, Component, Clone, PartialEq)]
+/// `Zone` is a struct that contains a `name` field of type `String`, a `height` field of type `f32`,
+/// and a `width` field of type `f32`. this stores a rectangle shaped zone.
+///
+/// Properties:
+///
+/// * `name`: The name of the zone.
+/// * `height`: The height of the zone.
+/// * `width`: The width of the zone.
 pub struct Zone {
     pub name: String,
     pub height: f32,
@@ -26,10 +34,23 @@ pub struct Zone {
 }
 
 #[derive(Default, Debug, Clone)]
+/// `AgentZoneMapping` is a `HashMap` that maps an `Entity` to a `Vec` of `Entity`s.
+///
+/// Properties:
+///
+/// * `map`: This is a HashMap that maps an zones to a list of agents.
 pub struct AgentZoneMapping {
     map: HashMap<Entity, Vec<Entity>>,
 }
 
+/// For each zone, check if any agents are in it. If they are, add them to the zone's list of agents
+///
+/// Arguments:
+///
+/// * `zones`: Query<(Entity, &Zone)> - get all zone entities.
+/// * `agents`: Query<Entity, With<Agent>> - get all agent entities.
+/// * `transform_q`: Query<&Transform>  - transform to query with entities
+/// * `zone_mapping`: This is the resource that we created earlier.
 fn update_zones(
     zones: Query<(Entity, &Zone)>,
     agents: Query<Entity, With<Agent>>,
@@ -78,6 +99,12 @@ fn update_zones(
     }
 }
 
+/// It creates a zone, spawns it, and adds it to the `AgentZoneMapping` resource
+///
+/// Arguments:
+///
+/// * `commands`: Commands - This is the command buffer that we use to spawn entities.
+/// * `zones`: ResMut<AgentZoneMapping>
 fn spawn_test_zone(mut commands: Commands, mut zones: ResMut<AgentZoneMapping>) {
     let zone: Zone = Zone {
         name: "TEST".parse().unwrap(),

@@ -5,6 +5,7 @@ use bevy::prelude::{App, ClearColor, Color, Msaa, WindowDescriptor};
 use bevy::DefaultPlugins;
 use npc_sim_bevy::GamePlugin;
 
+/// this is the main function that runs the application
 fn main() {
     App::new()
         .insert_resource(Msaa { samples: 1 })

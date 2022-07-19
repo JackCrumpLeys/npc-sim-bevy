@@ -14,10 +14,27 @@ impl Plugin for ActionsPlugin {
 }
 
 #[derive(Default)]
+/// `Actions` is a struct that contains a single field, `camera_movement`, which is an `Option<Vec2>`.
+///
+/// The `Option` type is a built-in type that can either be `Some(T)` or `None`. In this case,
+/// `camera_movement` is an `Option<Vec2>`, which means it can either be `Some(Vec2)` or `None`.
+///
+/// The `Vec2` type is a struct that has two fields: `x` and `y`.
+///
+/// Properties:
+///
+/// * `camera_movement`: This is a Vec2 that represents the movement of the camera.
 pub struct Actions {
     pub camera_movement: Option<Vec2>,
 }
 
+/// If the player is pressing or releasing a movement key, set the camera movement to the direction the
+/// player is pressing
+///
+/// Arguments:
+///
+/// * `actions`: ResMut<Actions> - This is the Actions resource that we created earlier.
+/// * `keyboard_input`: Res<Input<KeyCode>>
 fn set_movement_actions(mut actions: ResMut<Actions>, keyboard_input: Res<Input<KeyCode>>) {
     if GameControl::Up.just_released(&keyboard_input)
         || GameControl::Up.pressed(&keyboard_input)
@@ -75,6 +92,8 @@ fn set_movement_actions(mut actions: ResMut<Actions>, keyboard_input: Res<Input<
     }
 }
 
+/// Creating a new type called `GameControl` that can be one of four values: `Up`, `Down`, `Left`, or
+/// `Right`.
 enum GameControl {
     Up,
     Down,
@@ -83,6 +102,15 @@ enum GameControl {
 }
 
 impl GameControl {
+    /// If the player just released the key associated with the given GameControl, return true
+    ///
+    /// Arguments:
+    ///
+    /// * `keyboard_input`: &Res<Input<KeyCode>>
+    ///
+    /// Returns:
+    ///
+    /// A boolean value.
     fn just_released(&self, keyboard_input: &Res<Input<KeyCode>>) -> bool {
         match self {
             GameControl::Up => {
@@ -104,6 +132,16 @@ impl GameControl {
         }
     }
 
+    /// If the player is pressing the W, A, S, or D keys, or the up, left, down, or right arrow keys,
+    /// then return true
+    ///
+    /// Arguments:
+    ///
+    /// * `keyboard_input`: &Res<Input<KeyCode>>
+    ///
+    /// Returns:
+    ///
+    /// A boolean value.
     fn pressed(&self, keyboard_input: &Res<Input<KeyCode>>) -> bool {
         match self {
             GameControl::Up => {

@@ -13,11 +13,23 @@ impl Plugin for UiPlugin {
 }
 
 #[derive(Default)]
+/// `UiStates` is a struct that contains all the entity's that
+/// have menus that need to be rendered
+///
+/// Properties:
+///
+/// * `agents`: A vector of entities that are agents. these are rendered by egui.
 pub struct UiStates {
     pub(crate) agents: Vec<Entity>,
 }
 
-//render windows using egui for every agent in the Ui states
+/// `render_ui` renders the user interface for the selected agents
+///
+/// Arguments:
+///
+/// * `ui_states`: ResMut<UiStates> - resource containing a list of entities that are being rendered in the user interface.
+/// * `agents`: Query<(&mut Agent, &mut Transform)> - query containing agents and their transforms.
+/// * `egui_context`: ResMut<EguiContext> - resource containing the context for the Egui user interface.
 fn render_ui(
     ui_states: ResMut<UiStates>,
     mut agents: Query<(&mut Agent, &mut Transform)>,
